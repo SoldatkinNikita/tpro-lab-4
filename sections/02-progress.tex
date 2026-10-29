@@ -1,246 +1,83 @@
 \section{Ход работы}
 
-Основная часть посвящена системе Doxygen. Для документирования использован проект
-Beatstore Backend: серверное приложение музыкального каталога на Python.
-Примеры описаний рассмотрены на классе \texttt{TagRepository},
-а наследование -- на модели \texttt{Product}.
+Подсистема анализирует музыкальные и эмоциональные характеристики аудиозаписей
+и ищет произведения по характеристикам, текстовому описанию или образцу.
+Требования хранятся в Markdown, диаграммы описаны с помощью PlantUML [2].
+В отчёте приведены основные требования, сценарии и диаграмма классов.
 
-\subsection{Комментирование исходного кода по правилам Doxygen}
+\subsection{Описание исходных требований}
 
-В файле \texttt{repository.py} подготовлены специальные комментарии.
-Блок документации начинается с \verb|##|, последующие строки --- с \verb|#|.
-Использованы команды \texttt{@file} для файла, \texttt{@brief} для краткого
-описания, \texttt{@details} для подробного описания, \texttt{@param} для
-параметров, \texttt{@return} для результата, \texttt{@var} для атрибута
-и \texttt{@note} для особенностей реализации [2, 3].
+Функциональные и нефункциональные требования подсистемы приведены в исходных
+таблицах проекта [2].
+\input{sections/functional-requirements.tex}
+\input{sections/non-functional-requirements.tex}
 
-Фрагмент комментария к классу имеет следующий вид:
+\subsection{Диаграммы прецедентов}
 
-\begingroup
-\small
-\renewcommand{\ttdefault}{\rmdefault}
-\begin{verbatim}
-## @brief Репозиторий тегов.
-# @details Выполняет запросы к тегам через переданную асинхронную
-# сессию SQLAlchemy.
-class TagRepository:
-\end{verbatim}
-\endgroup
-
-Аналогично описаны конструктор, методы получения тегов и атрибут
-\texttt{session}. Для поиска по идентификатору указаны входной параметр
-\verb|tag_id|, результат \verb!Tag | None! и загрузка связанных продуктов.
-Эта загрузка выполняется через \verb|selectinload(Tag.products)|.
-Сохранённый файл содержит одновременно реализацию и сведения для
-генератора справки.
-
-\subsection{Запуск Doxygen и настройка проекта}
-
-В соответствии с методическими указаниями настройка включает название проекта,
-каталог исходников, рекурсивное сканирование и каталог результата.
-Для рассматриваемого Python-проекта выбираются файлы \texttt{.py},
-а кодировка входных файлов должна соответствовать UTF-8.
-Русские заголовки полученных страниц отражают выбор русского языка
-документации.
-
-Ниже приведён пример параметров \texttt{Doxyfile} для воспроизведения
-такой документации с обоими форматами вывода [4].
-Пути заданы относительно корня документируемого проекта:
-
-\begingroup
-\small
-\begin{verbatim}
-PROJECT_NAME       = "Beatstore Backend"
-INPUT              = .
-FILE_PATTERNS      = *.py *.dox *.md
-RECURSIVE          = YES
-INPUT_ENCODING     = UTF-8
-OUTPUT_LANGUAGE    = Russian
-OUTPUT_DIRECTORY   = docs
-OPTIMIZE_OUTPUT_JAVA = YES
-SOURCE_BROWSER     = YES
-GENERATE_HTML      = YES
-GENERATE_RTF       = YES
-GENERATE_LATEX     = NO
-CLASS_GRAPH        = YES
-\end{verbatim}
-\endgroup
-
-Параметр \verb|SOURCE_BROWSER| обеспечивает переход к исходному тексту,
-а \verb|CLASS_GRAPH| включает отображение наследования.
-
-\subsection{Генерация документации и просмотр результата}
-
-Для создания шаблона настроек и запуска генератора из корня проекта
-используются команды:
-
-\begingroup
-\small
-\begin{verbatim}
-doxygen -g Doxyfile
-doxygen Doxyfile
-\end{verbatim}
-\endgroup
-
-После настройки в графическом интерфейсе аналогичный запуск выполняется
-на вкладке Run кнопкой Run Doxygen. Для приведённых выше путей HTML-справка
-открывается через \texttt{docs/html/index.html}, а RTF-документ ---
-через \texttt{docs/rtf/refman.rtf} в текстовом редакторе, поддерживающем RTF.
-Формат RTF включается параметром \verb|GENERATE_RTF = YES| [4].
-
-Предоставленные результаты демонстрируют просмотр HTML-страниц в браузере.
-
-\subsection{Краткое и подробное описание класса}
-
-На странице \texttt{repository.TagRepository} краткое описание
-«Репозиторий тегов» отображается под именем класса.
-Раздел «Подробное описание» уточняет, что запросы выполняются через
-переданную асинхронную сессию SQLAlchemy.
-На рисунке~\ref{fig:doxygen-class} также перечислены конструктор,
-три метода чтения тегов и открытый атрибут \texttt{session}.
-
+Исходная диаграмма (рисунок~\ref{fig:uc-initial}) показывает границу
+подсистемы, актёров и их ассоциации с прецедентами. Вход связан с внешним
+сервисом аутентификации; анализ и отслеживание задания доступны сервису каталога,
+а пользователь взаимодействует с подсистемой при поиске.
 \begin{figure}[H]
-	\centering
-	\reportScreenshot{figures/05-short-and-long-class-desc.png}
-	\caption{Краткое и подробное описание класса TagRepository}
-	\label{fig:doxygen-class}
+ \centering\adjustbox{max width=\textwidth,max height=0.73\textheight}{\includegraphics{figures/diagrams/initial-use-cases.pdf}}
+ \caption{Исходная диаграмма прецедентов}\label{fig:uc-initial}
+\end{figure}
+На уточнённой диаграмме (рисунок~\ref{fig:uc-refined}) настройка параметров
+включает выбор модели, её версии и порогов. Варианты просмотра истории
+и экспорта показаны отношениями \texttt{extend}. В исходной модели три
+варианта поиска связаны с общим прецедентом отношениями \texttt{include}.
+При дальнейшем уточнении модели эти связи следует пересмотреть: выбор одного
+из альтернативных способов поиска не означает обязательное выполнение всех
+трёх.
+\begin{figure}[H]
+ \centering\adjustbox{max width=\textwidth,max height=0.73\textheight}{\includegraphics{figures/diagrams/clarified-use-cases.pdf}}
+ \caption{Уточнённая диаграмма прецедентов}\label{fig:uc-refined}
 \end{figure}
 
-Разделение описания на краткую и подробную части позволяет сначала
-определить назначение класса, затем ознакомиться с его зависимостями
-и доступными операциями.
+\subsection{Спецификации прецедентов}
 
-\subsection{Краткое и подробное описание функции класса}
+Спецификации анализа аудиозаписи и поиска по описанию приведены в исходных
+таблицах проекта [2].
+\input{sections/specification-analysis.tex}
+\input{sections/specification-search.tex}
 
-Для метода \verb|get_all_active_tags()| краткое описание сформулировано
-как «Возвращает список тегов». Подробная часть поясняет фактическую
-реализацию -- эти сведения и описание возвращаемого значения
-показаны на рисунке~\ref{fig:doxygen-method}.
+\subsection{Диаграммы деятельности}
 
+Диаграмма анализа (рисунок~\ref{fig:activity-analysis}) отражает выбор
+записей, проверку файлов, параллельное определение характеристик,
+отбор оценок и сохранение результата. Ветвь ошибки завершается после
+сообщения инициатору.
 \begin{figure}[H]
-	\centering
-	\reportScreenshot{figures/06-input-and-output-func-params.png}
-	\caption{Описание метода get\_all\_active\_tags() и его результата}
-	\label{fig:doxygen-method}
+ \centering\adjustbox{max width=\textwidth,max height=0.74\textheight}{\includegraphics{figures/diagrams/analyze-audio-activity.pdf}}
+ \caption{Диаграмма деятельности анализа аудиозаписи}\label{fig:activity-analysis}
 \end{figure}
 
-Возвращаемое значение -- список объектов \texttt{Tag} либо пустой список,
-если записи отсутствуют.
-
-\subsection{Входные параметры и возвращаемые значения функций}
-
-На странице \verb|get_tag_by_name()| команда \texttt{@param} формирует
-раздел «Аргументы»: параметр \texttt{name} описан как имя тега для поиска.
-Команда \texttt{@return} формирует раздел «Возвращает»: первый найденный
-объект \texttt{Tag} либо \texttt{None}, если совпадений нет.
-Результат приведён на рисунке~\ref{fig:doxygen-parameters}.
-
+Диаграмма поиска (рисунок~\ref{fig:activity-search}) показывает ввод
+описания, необязательные фильтры, проверку запроса, поиск в индексе
+и выдачу результата. Отдельные ветви предусмотрены для ошибки ввода
+и отсутствия подходящих записей.
 \begin{figure}[H]
-	\centering
-	\includegraphics[trim=0 0 465bp 0,clip,width=0.9\textwidth]
-	{figures/07-short-and-long-class-func-desc.png}
-	\caption{Входной параметр, результат и заметка метода get\_tag\_by\_name()}
-	\label{fig:doxygen-parameters}
+ \centering\adjustbox{max width=\textwidth,max height=0.74\textheight}{\includegraphics{figures/diagrams/search-audio-by-description-activity.pdf}}
+ \caption{Диаграмма деятельности поиска по описанию}\label{fig:activity-search}
 \end{figure}
 
-Заметка \texttt{@note} отдельно поясняет поведение \texttt{first()}:
-при нескольких совпадениях возвращается первое, исключение не возникает.
-Для конструктора аналогично описан параметр \texttt{session}, а для
-\verb|get_tag_by_id()| -- параметр \verb|tag_id| и результат \verb!Tag | None!.
+\subsection{Диаграмма классов предметной области}
 
-\subsection{Описание переменных класса}
-
-Атрибут \texttt{session} содержит асинхронную сессию SQLAlchemy,
-через которую репозиторий выполняет запросы. В исходном файле
-его назначение задано отдельным блоком:
-
-\begingroup
-\small
-\renewcommand{\ttdefault}{\rmdefault}
-\begin{verbatim}
-## @var session
-# @brief Асинхронная сессия SQLAlchemy, используемая репозиторием.
-\end{verbatim}
-\endgroup
-
-На рисунке~\ref{fig:doxygen-attribute} показано описание атрибута,
-включённое в документацию класса.
-
+Развёрнутая диаграмма классов (рисунок~\ref{fig:classes}) содержит
+аудиозапись, пользователя и роль, задание анализа, модель, профили весов
+и порогов, а также оценки уверенности. Задание связано с аудиозаписью и профилями;
+оценки принадлежат заданию и могут относиться к тегу или эмоциональной метке.
 \begin{figure}[H]
-	\centering
-	\reportScreenshot{figures/08-class-vars-desc.png}
-	\caption{Описание атрибута session класса TagRepository}
-	\label{fig:doxygen-attribute}
+ \addtocounter{figure}{1}
+ \centering\adjustbox{max width=\textwidth,max height=0.75\textheight}{\includegraphics{figures/diagrams/classes-diagram.pdf}}
+ \caption{Развёрнутая диаграмма классов предметной области}\label{fig:classes}
 \end{figure}
 
-\subsection{Описание проекта}
+\subsection{Прототип пользовательского интерфейса}
 
-Главная страница Beatstore Backend содержит название и краткую
-характеристику проекта: \textit{Python backend: domains, API and infrastructure}.
-В подробном описании указан API музыкального каталога и используемые
-технологии: Python/FastAPI, SQLAlchemy Async/PostgreSQL, Pydantic и S3.
-Далее перечислены разделы архитектуры, работы с тегами, базы данных
-и общих компонентов (рисунок~\ref{fig:doxygen-project}).
+Прототипы показывают страницы администратора для запуска анализа, контроля
+заданий, просмотра истории и настройки модели. Аудиофайлы и метаданные
+поступают из каталога; на страницах отображаются действия администратора
+и состояние обработки.
 
-\begin{figure}[H]
-	\centering
-	\includegraphics[width=\textwidth]
-	{figures/09-project-desc-and-file-link-in-desc.png}
-	\par\smallskip
-	\includegraphics[trim=0 0 970bp 510bp,clip,width=0.85\textwidth]
-	{figures/09-project-desc-and-file-link-in-desc.png}
-	\caption{Главная страница проекта и увеличенный фрагмент ссылок на файлы}
-	\label{fig:doxygen-project}
-\end{figure}
-
-Ссылки «Реализация TagRepository» и «ORM-модель тега» размещены
-в разделе «Ключевые файлы». Они связывают описание архитектуры
-с исходными файлами.
-Главная страница задаётся командой \texttt{@mainpage},
-а ссылки на объекты и файлы --- командой \texttt{@ref} [3].
-
-\subsection{Описание файла и ссылка на него в описании проекта}
-
-В начале \texttt{repository.py} расположен следующий блок:
-
-\begingroup
-\small
-\renewcommand{\ttdefault}{\rmdefault}
-\begin{verbatim}
-## @file
-# @brief Репозиторий для чтения тегов из базы данных.
-\end{verbatim}
-\endgroup
-
-На рисунке~\ref{fig:doxygen-file} показана страница файла.
-Она содержит его назначение, класс \texttt{TagRepository},
-пространство имён \texttt{repository} и ссылку на исходный текст.
-
-\begin{figure}[H]
-	\centering
-	\reportScreenshot{figures/10-file-desc.png}
-	\caption{Описание файла repository.py}
-	\label{fig:doxygen-file}
-\end{figure}
-
-Ссылка на реализацию репозитория на главной странице проекта
-(рисунок~\ref{fig:doxygen-project}) обеспечивает переход от общего
-описания к файлу.
-
-\subsection{Описание производного класса}
-
-В качестве производного класса рассмотрена модель \texttt{Product}.
-На рисунке~\ref{fig:doxygen-derived-class} видны её базовые классы
-\texttt{IdIntPKMixin}, \texttt{CreatedAtMixin} и \texttt{Base},
-а также граф наследования.
-
-\begin{figure}[H]
-	\centering
-	\includegraphics[width=\textwidth]{figures/11-derived-class-desc.png}
-	\caption{Страница производного класса Product и граф наследования}
-	\label{fig:doxygen-derived-class}
-\end{figure}
-
-Страница содержит методы \verb|__str__| и \verb|__repr__|, поля модели
-и связи с категориями, лицензиями, тегами, авторами и файлами каталога.
-Doxygen отображает состав производного класса и его место в иерархии.
+\input{sections/03-additional-task.tex}

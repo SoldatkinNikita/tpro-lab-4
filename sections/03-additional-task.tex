@@ -1,166 +1,79 @@
-\section{Дополнительное задание}
-
-GitHub Copilot использован как интеллектуальный помощник при реализации
-методов классов в Visual Studio Code [5]. В дополнительном задании показано
-получение предложений кода по четырём видам запросов: краткому комментарию
-и имени функции, подробному описанию функции, описанию алгоритма и описанию
-вызова функции.
-
-\subsection{Подготовка проекта и класса}
-
-Для выполнения задания использован проект Beatstore Backend, написанный
-на Python. Работа выполнялась в Visual Studio Code с расширением
-GitHub Copilot. В редакторе подготовлен класс \verb|TagRepository|,
-предназначенный для чтения тегов из базы данных. Конструктор принимает
-асинхронную сессию SQLAlchemy \verb|AsyncSession| и сохраняет её в атрибуте
-\verb|session|. Методы репозитория формируют запросы к ORM-модели
-\verb|Tag| и выполняют их через эту сессию.
-
-Для демонстрации выбраны операции получения списка тегов и поиска тега
-по имени и идентификатору. Дополнительно использованы методы сервисного
-слоя, которые обращаются к репозиторию через \verb|self.db.tags|.
-
-\subsection{Краткий комментарий и имя функции}
-
-Первый запрос содержит краткое описание назначения метода и его сигнатуру:
-
-\begingroup
-\small
-\renewcommand{\ttdefault}{\rmdefault}
-\begin{verbatim}
-# Получить список всех активных тэгов.
-async def get_all_active_tags(self) -> list[Tag]:
-\end{verbatim}
-\endgroup
-
-На рисунке~\ref{fig:copilot-short-request} Copilot формирует
-запрос \verb|select(Tag)| с условием \verb|Tag.is_active == True|.
-Затем запрос выполняется асинхронно через
-\verb|self.session.scalars(tags_stmt)|, а полученные ORM-объекты
-преобразуются в список. Предложение согласуется с кратким комментарием:
-условие ограничивает выборку активными тегами, а возвращаемое значение
-соответствует аннотации \verb|list[Tag]|.
-
-\begin{figure}[H]
-	\centering
-	\reportScreenshot{figures/01-short-comm-and-func-name.png}
-	\caption{Предложение Copilot по краткому комментарию и имени функции}
-	\label{fig:copilot-short-request}
+На экране анализа доступен каталог с поиском, фильтрами и запуском обработки
+отдельной записи или выбранной группы (рисунки~\ref{fig:proto1} и~\ref{fig:proto2}).
+\begin{figure}[H]\centering
+ \reportScreenshot{figures/01-analyze-audio.png}
+ \caption{Каталог записей для запуска анализа}\label{fig:proto1}
+\end{figure}
+\begin{figure}[H]\centering
+ \reportScreenshot{figures/02-analyze-audio.png}
+ \caption{Выбор аудиозаписей для анализа}\label{fig:proto2}
 \end{figure}
 
-\subsection{Подробное описание работы функции}
-
-Для поиска тега по имени подготовлен более подробный комментарий,
-задающий условия выборки и ограничения реализации:
-
-\begingroup
-\small
-\renewcommand{\ttdefault}{\rmdefault}
-\begin{verbatim}
-# Асинхронно найти тег, сравнив поле name с переданным name через SQL =.
-# Использовать SQLAlchemy 2.x select и текущую AsyncSession.
-# Вернуть ORM-объект Tag или None, если совпадений нет.
-# Если найдено несколько строк, не скрывать нарушение
-# ожидаемой уникальности.
-# Не выполнять commit, не создавать новую сессию
-# и не загружать products.
-async def get_tag_by_name(self, name: str) -> Tag | None:
-\end{verbatim}
-\endgroup
-
-Метод принимает строку имени тега и возвращает объект \verb|Tag|
-либо \verb|None|.
-
-На рисунке~\ref{fig:copilot-detailed-request} показан код поиска по имени.
-Запрос включает выборку \verb|select(Tag)| и условие \verb|Tag.name == name|.
-Copilot использует текущую сессию и оператор \verb|await|, не добавляет
-фиксацию транзакции или загрузку связанных продуктов. Однако получение
-результата через \verb|first()| выполняет только часть условий запроса.
-
-\begin{figure}[H]
-	\centering
-	\reportScreenshot{figures/02-long-comm-and-func-desc.png}
-	\caption{Предложение Copilot по подробному описанию поиска тега}
-	\label{fig:copilot-detailed-request}
+Состояние выполняемых заданий и сведения о конкретном запуске показаны
+на рисунках~\ref{fig:proto3} и~\ref{fig:proto4}.
+\begin{figure}[H]\centering
+ \reportScreenshot{figures/03-analyze-audio-active-task.png}
+ \caption{Список активных заданий анализа}\label{fig:proto3}
+\end{figure}
+\begin{figure}[H]\centering
+ \reportScreenshot{figures/04-analyze-audio-active-task-detailed.jpg}
+ \caption{Подробные сведения об активном задании}\label{fig:proto4}
 \end{figure}
 
-\subsection{Комментарий с описанием алгоритма}
-
-Следующий вариант запроса описывает алгоритм получения тега
-по идентификатору. В данном проекте последовательность действий основной
-программы представлена методом сервисного слоя
-\verb|get_tag_by_id|, который использует репозиторий. В комментарии
-заданы следующие шаги:
-
-\begingroup
-\small
-\renewcommand{\ttdefault}{\rmdefault}
-\begin{verbatim}
-# Алгоритм получения тега по идентификатору:
-# 1. Вызвать асинхронный метод get_tag_by_id(tag_id)
-#    репозитория TagRepository.
-# 2. Если репозиторий вернул None, вызвать TagNotFoundError
-#    с сообщением "Tag not found" и details={"tag_id": tag_id}.
-# 3. Иначе вернуть найденный объект тега.
-\end{verbatim}
-\endgroup
-
-Предложенный фрагмент на рисунке~\ref{fig:copilot-algorithm-request}
-повторяет эту последовательность: выполняет
-\verb|await self.db.tags.get_tag_by_id(tag_id)|, проверяет результат
-оператором \verb|if tag is None|, формирует заданное исключение
-и возвращает найденный тег. Алгоритм достаточно конкретен, чтобы
-помощник воспроизвёл порядок операций и данные ошибки.
-
-\begin{figure}[H]
-	\centering
-	\reportScreenshot{figures/03-comm-and-func-algo.png}
-	\caption{Предложение Copilot по описанию алгоритма сервисного метода}
-	\label{fig:copilot-algorithm-request}
+Для повторной обработки всего каталога предусмотрен отдельный сценарий
+(рисунок~\ref{fig:proto5}). История запусков содержит статусы и сведения
+о качестве результатов, а также предоставляет экспорт (рисунки~\ref{fig:proto6}
+и~\ref{fig:proto7}).
+\begin{figure}[H]\centering
+ \reportScreenshot{figures/05-analyze-catalog.png}
+ \caption{Запуск анализа каталога}\label{fig:proto5}
+\end{figure}
+\begin{figure}[H]\centering
+ \reportScreenshot{figures/06-view-analisis-history.png}
+ \caption{Просмотр истории анализов}\label{fig:proto6}
+\end{figure}
+\begin{figure}[H]\centering
+ \reportScreenshot{figures/07-export-analysis-history.png}
+ \caption{Экспорт истории анализов}\label{fig:proto7}
 \end{figure}
 
-В сигнатуре указан тип \verb|TagChildResponse|.
-Тело метода возвращает переменную \verb|tag|, полученную от репозитория.
-Этот фрагмент демонстрирует
-реализацию описанного алгоритма; соответствие фактического объекта
-аннотации результата необходимо учитывать при проверке метода
-в контексте проекта.
-
-\subsection{Комментарий с описанием вызова функции}
-
-Для последнего варианта запроса указан требуемый вызов метода
-репозитория из сервисного слоя:
-
-\begingroup
-\small
-\renewcommand{\ttdefault}{\rmdefault}
-\begin{verbatim}
-# Получить список всех активных тэгов.
-# Использовать вызов соответствующего метода из репозитория TagRepository.
-\end{verbatim}
-\endgroup
-
-На рисунке~\ref{fig:copilot-call-request} приведён метод получения списка тегов.
-Его имя --- \verb|get_all_active_tags|, тип результата --- \verb|list|.
-В теле выполняется асинхронный вызов
-\verb|self.db.tags.get_all_active_tags()| и возвращается список \verb|tags|.
-Описание вызова позволяет
-задать связь между слоями проекта: сервис передаёт получение данных
-репозиторию, вместо повторного формирования SQL-запроса.
-
-\begin{figure}[H]
-	\centering
-	\reportScreenshot{figures/04-comm-func-call.png}
-	\caption{Предложение Copilot по описанию вызова метода репозитория}
-	\label{fig:copilot-call-request}
+Вход администратора показан на рисунке~\ref{fig:proto8}. Операция удаления
+результата представлена последовательностью выбора, подтверждения и уведомления
+(рисунки~\ref{fig:proto9}-\ref{fig:proto11}).
+\begin{figure}[H]\centering
+ \reportScreenshot{figures/08-admin-login.png}
+ \caption{Вход администратора}\label{fig:proto8}
+\end{figure}
+\begin{figure}[H]\centering
+ \reportScreenshot{figures/09-delete-analisis-result.png}
+ \caption{Выбор результата для удаления}\label{fig:proto9}
+\end{figure}
+\begin{figure}[H]\centering
+ \reportScreenshot{figures/10-delete-analisis-result.png}
+ \caption{Подтверждение удаления результата}\label{fig:proto10}
+\end{figure}
+\begin{figure}[H]\centering
+ \reportScreenshot{figures/11-delete-analisis-result-notifications.png}
+ \caption{Уведомление об удалении результата}\label{fig:proto11}
 \end{figure}
 
-\subsection{Выбор и проверка предложенного кода}
-
-При сопоставлении предложений с запросами проверены состав SQL-запросов,
-использование текущей асинхронной сессии, наличие \verb|await|,
-обработка отсутствующего тега и способ получения результата.
-Для каждого из четырёх вариантов запроса получен содержательный фрагмент
-реализации. Краткий комментарий задаёт назначение, подробное описание
-добавляет ограничения, алгоритм определяет порядок действий, а описание
-вызова указывает взаимодействие с репозиторием.
+Результаты анализа и характеристики записи представлены на
+рисунках~\ref{fig:proto12} и~\ref{fig:proto13}. Экран параметров модели
+позволяет задать версию модели и пороги уверенности (рисунок~\ref{fig:proto14});
+отмена задания показана на рисунке~\ref{fig:proto15}.
+\begin{figure}[H]\centering
+ \reportScreenshot{figures/12-view-result-of-analysis.png}
+ \caption{Просмотр результата анализа}\label{fig:proto12}
+\end{figure}
+\begin{figure}[H]\centering
+ \reportScreenshot{figures/13-view-result-of-analysis.png}
+ \caption{Подробные характеристики результата анализа}\label{fig:proto13}
+\end{figure}
+\begin{figure}[H]\centering
+ \reportScreenshot{figures/14-config-model-parameters.png}
+ \caption{Настройка параметров модели и порогов}\label{fig:proto14}
+\end{figure}
+\begin{figure}[H]\centering
+ \reportScreenshot{figures/15-cancel-analyze-task.png}
+ \caption{Отмена задания анализа}\label{fig:proto15}
+\end{figure}

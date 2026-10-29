@@ -3,6 +3,9 @@
 \usepackage{geometry}
 \usepackage{graphicx}
 \usepackage{tabularx}
+\usepackage{longtable}
+\usepackage{array}
+\newcolumntype{L}[1]{>{\raggedright\arraybackslash}p{#1}}
 \usepackage{caption}
 \usepackage{adjustbox}
 \usepackage{float}
@@ -45,13 +48,12 @@
 \setlength{\parskip}{0pt}
 \setlength{\emergencystretch}{3em}
 
-\pretocmd{\section}{\clearpage}{}{}
-
 \newcommand{\baumanLogoPath}{figures/Logo_Color_With-BG.png}
 
+\DeclareCaptionLabelSeparator{hyphen}{ - }
 \captionsetup[figure]{
 	name=Рисунок,
-	labelsep=endash,
+	labelsep=hyphen,
 	justification=centering,
 	singlelinecheck=false
 }
